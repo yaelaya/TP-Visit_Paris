@@ -43,7 +43,7 @@ class ListActivity : AppCompatActivity() {
     private fun filterList(s: String) {
         val filteredList = ArrayList<Star>()
         for (star in stars) {
-            if (star.name.toLowerCase().startsWith(s.toLowerCase().trim())) {
+            if (star.name.lowercase().startsWith(s.lowercase().trim())) {
                 filteredList.add(star)
             }
         }

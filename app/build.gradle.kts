@@ -7,6 +7,14 @@ android {
     namespace = "ma.ensa.projet"
     compileSdk = 34
 
+    buildFeatures {
+        dataBinding = true
+    }
+
+    viewBinding {
+        enable = true
+    }
+
     defaultConfig {
         applicationId = "ma.ensa.projet"
         minSdk = 30
@@ -42,6 +50,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.ui.graphics.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

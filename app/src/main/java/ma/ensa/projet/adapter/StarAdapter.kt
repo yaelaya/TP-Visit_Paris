@@ -1,6 +1,7 @@
 package ma.ensa.projet.adapter
 import android.content.Context
 import android.content.DialogInterface
+import android.content.res.ColorStateList
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,7 +13,9 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.RelativeLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.ui.graphics.Color
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -29,6 +32,7 @@ class StarAdapter(
 ) : RecyclerView.Adapter<StarAdapter.StarViewHolder>(), Filterable {
 
     private var starsFilter: MutableList<Star> = ArrayList(stars)
+    private val originalStars: List<Star> = stars
     private val mFilter: NewFilter = NewFilter(this)
 
     fun setFilteredList(filteredList: List<Star>) {
@@ -56,35 +60,54 @@ class StarAdapter(
             null,
             false
         )
-        binding.star = holder.binding.star
 
-        AlertDialog.Builder(context, R.style.MyDialogStyle)
-            .setTitle("Place Evaluation")
-            .setView(binding.root)
-            .setPositiveButton("Confirm") { _, _ ->
-                val rating = binding.ratingBar.rating
-                val id = binding.idss.text.toString().toInt()
-                val star = StarService.getInstance().findById(id)
-                star?.let {
-                    it.star = rating
-                    StarService.getInstance().update(it)
+        val currentStar = holder.binding.star
+        if (currentStar != null) {
+            binding.star = currentStar
+
+            Glide.with(context)
+                .load(currentStar.img)
+                .into(binding.img)
+
+            binding.idss.text = currentStar.id.toString()
+            binding.name.text = currentStar.name
+
+            AlertDialog.Builder(context, R.style.MyDialogStyle)
+                .setTitle("Place Evaluation")
+                .setView(binding.root)
+                .setPositiveButton("Confirm") { _, _ ->
+
+                    val rating = binding.ratingBar.rating
+                    currentStar.star = rating
+
+                    StarService.getInstance().update(currentStar)
+                    notifyItemChanged(holder.adapterPosition)
                 }
-                notifyItemChanged(holder.adapterPosition)
-            }
-            .setNegativeButton("Cancel", null)
-            .create()
-            .show()
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show()
+        } else {
+            Log.e(TAG, "Current star is null, cannot show dialog.")
+        }
     }
+
+
 
     override fun onBindViewHolder(holder: StarViewHolder, position: Int) {
         val currentStar = starsFilter[position]
         holder.binding.star = currentStar
-        holder.binding.executePendingBindings() //immediate binding
+
+        Glide.with(holder.itemView.context)
+            .load(currentStar.img)
+            .into(holder.binding.img)
+
+        holder.binding.ratingBar.rating = currentStar.star
+
+        holder.binding.executePendingBindings()
     }
 
-    override fun getItemCount(): Int {
-        return starsFilter.size
-    }
+
+    override fun getItemCount(): Int = starsFilter.size
 
     override fun getFilter(): Filter {
         return mFilter
@@ -96,10 +119,10 @@ class StarAdapter(
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             val filteredList: MutableList<Star> = ArrayList()
             if (constraint.isNullOrEmpty()) {
-                filteredList.addAll(stars)
+                filteredList.addAll(originalStars)
             } else {
                 val filterPattern = constraint.toString().lowercase().trim()
-                for (item in stars) {
+                for (item in originalStars) {
                     if (item.name.lowercase().startsWith(filterPattern)) {
                         filteredList.add(item)
                     }
@@ -124,4 +147,3 @@ class StarAdapter(
         private const val TAG = "StarAdapter"
     }
 }
-
